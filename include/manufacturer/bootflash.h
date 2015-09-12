@@ -7,84 +7,71 @@
     Modification History:
     <version > <time> <author> <desc>
 *******************************************************************************/
-#ifndef __INCbootflashh
-#define __INCbootflashh
+#ifndef __BOOTFLASH_H
+#define __BOOTFLASH_H
 
 #ifndef CFG_MAGIC
-#define  CFG_MAGIC          0x5354524e  /* STRN */
+#define  CFG_MAGIC              0x5354524e  /* STRN */
 #endif
 
 #ifndef MAX_ETHERNET
-#define MAX_ETHERNET        2
+#define MAX_ETHERNET            6
 #endif
 
 #ifndef MACADDR_LEN
-#define MACADDR_LEN         6
+#define MACADDR_LEN             6
 #endif
 
-#define PRODDATELEN         8           /* 生产日期 */
-#define PRODNUMLEN          9           /* 9位数的序列号 */
-#define SERIALNO_LEN        48          /* 序列号长度 */
-#define MODEL_LEN           64          /* 自定义产品型号长度 */
+#ifndef SERIALNO_LEN
+#define SERIALNO_LEN            48          /* 序列号长度 */
+#endif
 
 /* reserved feature numbers */
-#define RESERVED_FEA_NUMS	15
+#define RESERVED_FEA_NUMS       25
+#define PRODDATELEN             8           /* 生产日期 */
+#define PRODNUMLEN              9           /* 9位数的序列号 */
+#define MODEL_LEN               64          /* 自定义产品型号长度 */
+#define BOOT_PARAMS_LEN()       (sizeof(BOOT_PARAMS) - 12)
 
+typedef struct {
+/* 0  */unsigned int   magicNumber;                         /* 幻数 */
+/* 4  */unsigned int   paraChecksum;                        /* 检查和 */
+/* 8  */unsigned int   paraLength;                          /* 结构长度  检查和、长度从'encryptVer'开始计算 */
+/* 12 */unsigned int   encryptVer;                          /* 加密版本:用于控制此结构的更改 */
+
+/*以下4项用户升级控制:必须与升级文件包中的内容一致*/
+/* 16 */unsigned int   language;                            /* 支持语言 */
+/* 20 */unsigned int   deviceClass;                         /* 产品大类 */
+/* 24 */unsigned int   oemCode;                             /* OEM代码：1---代表自己 */
+/* 28 */unsigned char  res1[RESERVED_FEA_NUMS];             /* 保留产品特性，用于升级控制 */
+/* 53 */unsigned char  macAddr[MAX_ETHERNET][MACADDR_LEN];  /* 设备MAC地址 */
+/* 89 */unsigned char  prodDate[PRODDATELEN];               /* 设备生产日期,ASCII */
+/* 97 */unsigned char  prodNo[PRODNUMLEN];                  /* 设备序列号 */
+/*106 */unsigned char  zone;                                /* 销售地区 */
+/*107 */unsigned char  res2[21];
+/*128 */unsigned int   devType;                             /* 设备类型，4个字节 */
+/*132 */unsigned char  devModel[MODEL_LEN];                 /* 产品型号:考虑国标型号，扩充到64字节 */
+/*196 */unsigned char  writeDate[PRODDATELEN];              /* 设备信息更新日期,ASCII */
+/*204 */unsigned int   crypto;                              /* 是否加密过 1：是，0：否 */
+/*208 */unsigned char  res3[48];
+} BOOT_PARAMS;
+
+/* 512 Bytes */
 typedef struct
-{   
-/* 256 bytes */
-/* 0  */unsigned int        magicNumber;                            /* 幻数 */
-/* 4  */unsigned int        paraChecksum;                           /* 检查和 */
-/* 8  */unsigned int        paraLength;                             /* 结构长度 */  /* 检查和、长度从'encryptVer'开始计算 */
-/* 12 */unsigned int        encryptVer;                             /* 加密版本:用于控制此结构的更改 */
-/*
-    以下4项用户升级控制:必须与升级文件包中的内容一致
-*/
-/* 16 */unsigned int        language;                               /* 语言 */
-/* 20 */unsigned int        device_class;                           /* 产品类型, 1 -- DS9000 DVR, ... */
-/* 24 */unsigned int        oemCode;                                /* oem 代码: 1 -- hikvision自己, ... */
-/* 28 */unsigned char		upgradeVersion;						    /* 升级版本号*/
-/* 29 */unsigned char		reservedFeature[RESERVED_FEA_NUMS];		/* 保留的产品特性，用于升级控制 */
-/* 44 */unsigned short      encodeChans;                            /* 编码路数 */
-/* 46 */unsigned short      decodeChans;                            /* 解码路数 */
-/* 48 */unsigned short      ipcChans;                               /* IPC通道数 */
-/* 50 */unsigned short      ivsChans;                               /* 智能通道数 */
-/* 52 */unsigned char       picFormat;                              /* 编码最大分辨率 0--CIF, 1--2CIF, 2--4CIF */
-/* 53 */unsigned char       macAddr[MAX_ETHERNET][MACADDR_LEN];     /* 物理地址 */
-/* 65 */unsigned char       prodDate[PRODDATELEN];                  /* 生产日期 */
-/* 73 */unsigned char       prodNo[PRODNUMLEN];                     /* 产品序号 */
-/* 82 */unsigned char       devHigh;                                /* 高度 1--1U, 2--2U                     */
-/* 83 */unsigned char       cpuFreq;                                /* ARM主频: 1--400Mhz, 2--500Mhz ..      */
-/* 84 */unsigned char       dspFreq;                                /* DSP主频: 1--700Mhz, 2--900Mhz ..      */
-/* 85 */unsigned char       zone;                                   /* 销售地区: 1--大陆 2--港台 3--海外 ... */
-/* 86 */unsigned char       webSupport;                             /* 支持WEB */
-/* 87 */unsigned char       voipSupport;                            /* 支持VOIP */
-/* 88 */unsigned char       usbNums;                                /* USB个数: 0、1、2 */
-/* 89 */unsigned char       lcdSupport;                             /* 支持LCD */
-/* 90 */unsigned char       voNums;                                 /* 本地VO个数: 0、1、2 */
-/* 91 */unsigned char       vganums;                                /* VGA个数: 0、1、2 */
-/* 92 */unsigned char       vtSupport;                              /* 支持语音对讲  */
-/* 93 */unsigned char       videoMaxtrix;                           /* 视频矩阵输出: 0 -- 无，1 -- 16进4出 ... */
-/* 94 */unsigned char       extendedDecoder;                        /* 多路解码扩展板 */
-/* 95 */unsigned char       extendedIVS;                            /* 智能视频分析扩展板 */
-/* 96 */unsigned char       extendedAlarmOut;                       /* 报警输出扩展板 */
-/* 97 */unsigned char       res1[3];
-/*100 */unsigned short      devType;                                /* 设备型号，2个字节 */
-/*102 */unsigned char       res2[2];
-/*104 */unsigned int        ubootAdrs;                              /* uboot存放flash地址       */
-/*108 */unsigned int        ubootSize;                              /* uboot大小                */
-/*112 */unsigned int        ubootCheckSum;                          /* uboot校验值              */
-/*116 */unsigned int        tinyKernelAdrs;                         /* tinyKernel存放flash地址  */
-/*120 */unsigned int        tinyKernelSize;                         /* tinyKernel大小           */
-/*124 */unsigned int        tinyKernelCheckSum;                     /* tinyKernel校验值         */
-/*128 */unsigned char       devModel[MODEL_LEN];                    /* 产品型号:考虑国标型号，扩充到64字节 */
-/*192 */unsigned char       writeDate[PRODDATELEN];                 /* 设备信息更新日期,ASCII */
-/*200 */unsigned int        crypto;                                 /* 是否加密过 1：是，0：否 */
-/*204 */unsigned int        kmem;                                   /* 内核使用的内存大小 */
-/*208 */unsigned int        dspmem;                                 /* DSP部分使用的内存大小 */
-/*212 */unsigned char       res3[44];
-}BOOT_PARAMS;
-
+{
+    BOOT_PARAMS     boot_params;                                //boot参数
+    unsigned int    year;                                       //当前时间：年、月、日、时、分、秒
+    unsigned int    month;
+    unsigned int    day;
+    unsigned int    hour;
+    unsigned int    minute;
+    unsigned int    second;
+    unsigned int    dayofweek;
+    unsigned int    dogId;                                      //设置人员的ID(加密狗的流水号)
+    unsigned int    formatFlash;                                //0 --- 不格式化，1 --- 格式化
+    unsigned int    irewrite;                                   //0 --- 不重写，  1 --- 重写
+    unsigned char   res[512 - 296];
+}PRODUCT_INFO, *PPRODUCT_INFO;
 
 /* Define Hardware version information */
 #ifndef HVER_MAGIC
@@ -94,161 +81,161 @@ typedef struct
 /* Hardware 结构信息 */
 typedef union {
     struct {
-        u16    ddr_bitw           :4;   //[0..3]
-        u16    ddr_freq           :4;   //[4..7]
-        u16    arm_freq           :4;   //[8..11]
-        u16    arm_chip           :4;   //[12..15]
+        unsigned short    ddr_bitw           :4;   //[0..3]
+        unsigned short    ddr_freq           :4;   //[4..7]
+        unsigned short    arm_freq           :4;   //[8..11]
+        unsigned short    arm_chip           :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_sys;
 
 typedef union {
     struct {
-        u16    reserve0           :4;   //[0..3]
-        u16    encrypt_chip       :4;   //[4..7]
-        u16    flash_volume       :4;   //[8..11]
-        u16    flash_type         :4;   //[12..15]
+        unsigned short    reserve0           :4;   //[0..3]
+        unsigned short    encrypt_chip       :4;   //[4..7]
+        unsigned short    flash_volume       :4;   //[8..11]
+        unsigned short    flash_type         :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_flash;
 
 typedef union {
     struct {
-        u16 day_u                 :4;   //[3..0]
-        u16 day_d                 :2;   //[5..4]
-        u16 month                 :4;   //[9..6]
-        u16 year_u                :4;   //[13..10]
-        u16 year_d                :2;   //[15..14]
+        unsigned short day_u                 :4;   //[3..0]
+        unsigned short day_d                 :2;   //[5..4]
+        unsigned short month                 :4;   //[9..6]
+        unsigned short year_u                :4;   //[13..10]
+        unsigned short year_d                :2;   //[15..14]
     } bits;
-    u16 reg;
+    unsigned short reg;
 }u_firmv;
 
 typedef union {
     struct {
-        u16    cpld_date          :4;   //[0..3]
-        u16    rtc_inner          :4;   //[4..7]
-        u16    device_type        :4;   //[8..11]
-        u16    panel_type         :4;   //[12..15]
+        unsigned short    cpld_date          :4;   //[0..3]
+        unsigned short    rtc_inner          :4;   //[4..7]
+        unsigned short    device_type        :4;   //[8..11]
+        unsigned short    panel_type         :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_peri;
 
 typedef union {
     struct {
-        u16    audio_intercom     :4;   //[0..3]
-        u16    ad_type            :4;   //[4..7]
-        u16    audio_input        :8;   //[8..15]
+        unsigned short    audio_intercom     :4;   //[0..3]
+        unsigned short    ad_type            :4;   //[4..7]
+        unsigned short    audio_input        :8;   //[8..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_auin;
 
 typedef union {
     struct {
-        u16    reserved0          :8;   //[0..7]
-        u16    da_type            :4;   //[8..11]
-        u16    audio_output       :4;   //[11..15]
+        unsigned short    reserved0          :8;   //[0..7]
+        unsigned short    da_type            :4;   //[8..11]
+        unsigned short    audio_output       :4;   //[11..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_auout;
 
 typedef union {
     struct{
-        u16    reserve0           :4;   //[0..3]
-        u16    reserve1           :4;   //[4..7]
-        u16    mac1_mode          :4;   //[8..11]
-        u16    mac0_mode          :4;   //[12..15]
+        unsigned short    reserve0           :4;   //[0..3]
+        unsigned short    reserve1           :4;   //[4..7]
+        unsigned short    mac1_mode          :4;   //[8..11]
+        unsigned short    mac0_mode          :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_mac;
 
 typedef union {
     struct {
-        u16    phy1_chip          :8;   //[0..7]
-        u16    phy0_chip          :8;   //[8..15]
+        unsigned short    phy1_chip          :8;   //[0..7]
+        unsigned short    phy0_chip          :8;   //[8..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_phytype;
 
 typedef union {
     struct {
-        u16    phy1_addr          :8;   //[0..7]
-        u16    phy0_addr          :8;   //[8..15]
+        unsigned short    phy1_addr          :8;   //[0..7]
+        unsigned short    phy0_addr          :8;   //[8..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_phyaddr;
 
 typedef union {
     struct{
-        u16    esata_num          :4;   //[0..3]
-        u16    pm_type            :4;   //[4..7]
-        u16    sata_num           :8;   //[8..15]
+        unsigned short    esata_num          :4;   //[0..3]
+        unsigned short    pm_type            :4;   //[4..7]
+        unsigned short    sata_num           :8;   //[8..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_sata;
 
 typedef union {
     struct{
-        u16    reserve0           :4;   //[0..3]
-        u16    reserve1           :4;   //[4..7]
-        u16    hub_type           :4;   //[8..11]
-        u16    usb_num            :4;   //[12..15]
+        unsigned short    reserve0           :4;   //[0..3]
+        unsigned short    reserve1           :4;   //[4..7]
+        unsigned short    hub_type           :4;   //[8..11]
+        unsigned short    usb_num            :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_usb;
 
 typedef union {
     struct {
-        u16    alarm_out          :8;   //[0..7]
-        u16    alarm_in           :8;   //[8..15]
+        unsigned short    alarm_out          :8;   //[0..7]
+        unsigned short    alarm_in           :8;   //[8..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_alarm;
 
 typedef union {
     struct{
-        u16    reserve0           :4;   //[0..3]
-        u16    cvbs_num           :4;   //[4..7]
-        u16    hdmi_num           :4;   //[8..11]
-        u16    vga_num            :4;   //[12..15]
+        unsigned short    reserve0           :4;   //[0..3]
+        unsigned short    cvbs_num           :4;   //[4..7]
+        unsigned short    hdmi_num           :4;   //[8..11]
+        unsigned short    vga_num            :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_vou;
 
 typedef union {
     struct {
-        u16    reserved0          :4;   //[0..3]
-        u16    rs485_type         :4;   //[4..7]
-        u16    rs485_num          :4;   //[8..11]
-        u16    rs232_num          :4;   //[12..15]
+        unsigned short    reserved0          :4;   //[0..3]
+        unsigned short    rs485_type         :4;   //[4..7]
+        unsigned short    rs485_num          :4;   //[8..11]
+        unsigned short    rs232_num          :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_serial;
 
 typedef union {
     struct {
-        u16    reserve0           :4;   //[0..3]
-        u16    reserve1           :4;   //[4..7]
-        u16    reserve2           :4;   //[8..11]
-        u16    reserve3           :4;   //[12..15]
+        unsigned short    reserve0           :4;   //[0..3]
+        unsigned short    reserve1           :4;   //[4..7]
+        unsigned short    reserve2           :4;   //[8..11]
+        unsigned short    reserve3           :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_pcie;
 
 typedef union {
     struct{
-        u16    reserve0           :4;   //[0..3]
-        u16    reserve1           :4;   //[4..7]
-        u16    reserve2           :4;   //[8..11]
-        u16    reserve3           :4;   //[12..15]
+        unsigned short    reserve0           :4;   //[0..3]
+        unsigned short    reserve1           :4;   //[4..7]
+        unsigned short    reserve2           :4;   //[8..11]
+        unsigned short    reserve3           :4;   //[12..15]
     } bits;
-    u16    reg;
+    unsigned short    reg;
 } u_video;
 
 typedef struct {
-		u32         magic;                  /*0*/
-		u16         pcb;                    /*4*/
-		u8          reserved[8];            /*6*/
-		u16         board;                  /*E*/
+		unsigned int magic;                 /*0*/
+		unsigned short pcb;                 /*4*/
+		unsigned char reserved[8];          /*6*/
+		unsigned short board;               /*E*/
 		u_sys       sys;                    /*0x10*/
 		u_flash     attr_flash;             /*0x12*/
 		u_firmv     firmv;                  /*0x14*/
@@ -265,7 +252,8 @@ typedef struct {
 		u_serial    serial;                 /*0x2A*/
 		u_pcie      pcie_flags;             /*0x2C*/
 		u_video     video;                  /*0x2E*/
-		u16         expand[8];              /*0x30*/
+		unsigned short expand[8];           /*0x30*/
 }hardware_info; /*64B */
 
 #endif /* End of __INCbootflashh */
+
