@@ -2,7 +2,7 @@
     Copyright 2008-2020 XXX Digital Technology Co., Ltd.
     FileName    : bootflash.h
     Description : define BOOT_PARMS
-    Author      : JINWEI
+    Author      : David Jin
     Date        : 2015.8.28
     Modification History:
     <version > <time> <author> <desc>
