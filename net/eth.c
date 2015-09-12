@@ -25,7 +25,6 @@
 #include <command.h>
 #include <net.h>
 #include <spi_api.h>
-#include <manufacturer/bootflash.h>
 
 #if (CONFIG_COMMANDS & CFG_CMD_NET)
 
@@ -255,9 +254,10 @@ int eth_initialize( bd_t *bis ) {
 				puts(" [PRIME]");
 			}
 
-#define GMAC0_OFFSET    53
+#define GMAC0_OFFSET    0x28
 #define GDMA1_MAC_ADRL  0x2C
 #define GDMA1_MAC_ADRH  0x30
+#define EEPROM_MAGIC    0x7620
 
 			//get Ethernet mac address from flash
 #if defined (CFG_ENV_IS_IN_NAND)
@@ -270,10 +270,10 @@ int eth_initialize( bd_t *bis ) {
 			memmove( rt2880_gmac1_mac, 
 				CFG_FACTORY_ADDR + GMAC0_OFFSET, 6 );
 #endif
-            /* Add By JINWEI@2015.8.28 */
+            /* Add By JINWEI@2015.8.28, read first 128 bytes */
 			raspi_read(bp, CONFIG_FACTORY_OFFSET, 128);
-			magic = *(int *)bp;
-			if (magic == CFG_MAGIC)
+			magic = *(short *)bp;
+			if (magic == EEPROM_MAGIC)
 			{
 				//if flash is empty, use default mac address
 				if (memcmp(rt2880_gmac1_mac, empty_mac, 6 ) == 0)

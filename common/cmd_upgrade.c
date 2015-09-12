@@ -44,12 +44,6 @@ int do_factoryinfo_write(cmd_tbl_t *cmdtp, int flag, int argc, char *argv[])
 		return 0;
 	}
 
-	if (boot_params->magicNumber != CFG_MAGIC)
-	{
-		printf("Factory.bin is not correct: CFG MAGIC error!\n");
-		return 0;
-	}
-
     printf("Write factory info %d bytes into flash ...\n", filesize);
 
     if (raspi_erase(CONFIG_FACTORY_OFFSET, CFG_FACTORY_SIZE))
